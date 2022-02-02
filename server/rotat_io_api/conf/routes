@@ -1,0 +1,4 @@
++nocsrf
+POST    /api/enqueue                controllers.EnqueueController.enqueue()
+GET     /api/queue/:accessKey       controllers.QueueController.checkQueuePosition(accessKey: String)
+GET     /api/getResult/:accessKey   controllers.ResultController.getResult(accessKey: String)

@@ -1,0 +1,13 @@
+.result-container{
+    display: flex;
+    margin: 0 auto;
+    gap: 10px;
+    justify-content:center;
+    align-items: stretch;
+    align-content: center;
+    flex-direction: row;
+}
+
+/* .result-entry{
+    margin: 0 auto;
+} */

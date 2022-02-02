@@ -1,0 +1,29 @@
+@keyframes frameAction{
+    0% {
+        margin-top: 10px;
+    }
+    25% {
+        margin-top: 60px;
+    }
+    50% {
+        margin-top: 20px;
+    }
+    100% {
+        margin-top: 10px;
+    }
+}
+
+
+.queue-div{
+    padding: 2 rem;
+    border: dashed 1px lightskyblue;
+    animation-name: frameAction;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    border-image-slice: 1;
+    border-radius: 10px;
+    margin: 0 auto;
+    position: relative;
+    width: 600px;
+    padding: 50px;
+}
