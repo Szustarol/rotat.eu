@@ -22,62 +22,32 @@ import java.awt.image.BufferedImage
 import jobs._
 
 @Singleton
-class ResultController @Inject()(val controllerComponents: ControllerComponents) extends BaseController with DefaultWriteables{
+class ResultController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
 
-    class ResultForm(seq: Seq[BufferedImage]){
-        val (leftRotation, rightRotation, backRotation) = seq.zip(
-            Seq("left", "right", "back")
-        ).map{ case (bufferedImage: BufferedImage, partName: String) =>
-            val bos = new ByteArrayOutputStream()
-            ImageIO.write(bufferedImage, "png", bos)
-            MultipartFormData.FilePart(
-                partName,
-                s"${partName}_result.png",
-                Some("image/png"),
-                ByteString.fromArray(bos.toByteArray())
-            ) 
-        } match {
-            case Seq(l, r, b) => (l, r, b)
-        }
-
-        def getResponse() = {
-            MultipartFormData(
-                dataParts = Map[String, Seq[String]](), 
-                files = Seq(leftRotation, rightRotation, backRotation),
-                badParts =Seq()
-            )
-        }
-    }
-
-    implicit def writeableOf_MultipartFormDataWithBs(
-        codec: Codec,
-        contentType: Option[String]
-    ):play.api.http.Writeable[MultipartFormData[akka.util.ByteString]] = {
-        writeableOf_MultipartFormData(
-            codec,
-            Writeable[MultipartFormData.FilePart[akka.util.ByteString]](
-                (bs: MultipartFormData.FilePart[akka.util.ByteString]) => bs.ref,
-                contentType
-            )
-        )
+    def serveBufferedImage(bufferedImage: BufferedImage) = {
+        val bos = new ByteArrayOutputStream()
+        ImageIO.write(bufferedImage, "png", bos)
+        ByteString.fromArray(bos.toByteArray())
     }
 
 
-    def getResult(accessKey: String) = Action{request => 
+    def getResult(accessKey: String, rotation: String) = Action{request => 
         val jobResult = GeneratorData.getJobResult(accessKey)
 
 
         jobResult match {
             case Some(files) => {
-                val rf = new ResultForm(files)
-                Ok(
-                    rf.getResponse()
-                )(
-                    writeableOf_MultipartFormDataWithBs(
-                        Codec.utf_8,
-                        contentType = Some("multipart/form-data")
+                if (files contains rotation){
+                    Result(
+                        header = ResponseHeader(200, Map.empty),
+                        body = HttpEntity.Strict(serveBufferedImage(files(rotation)), Some("image/png"))
                     )
-                )
+                }
+                else{
+                    BadRequest(Json.toJson(
+                        new ErrorResponse("Requested rotation was not found on the server.")
+                    ))
+                }
             }
             case None => BadRequest(Json.toJson(
                 new ErrorResponse("The result was not found on the server")

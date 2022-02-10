@@ -8,6 +8,11 @@
     flex-direction: row;
 }
 
+#postprocessing{
+    margin: auto;
+    width: 400px;
+}
+
 /* .result-entry{
     margin: 0 auto;
 } */

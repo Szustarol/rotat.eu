@@ -9,7 +9,7 @@ import jobs._
 
 
 object GeneratorData{
-    private val handledRequests = scala.collection.concurrent.TrieMap[String, Option[Seq[BufferedImage]]]()
+    private val handledRequests = scala.collection.concurrent.TrieMap[String, Option[Map[String, BufferedImage]]]()
     private val jobIndices = scala.collection.concurrent.TrieMap[String, Long]()
     private val cleaningJobs = scala.collection.mutable.ArrayDeque[(Long, String)]()
     private var jobQueue = scala.collection.mutable.ArrayDeque[(String, BufferedImage)]() 
@@ -53,9 +53,10 @@ object GeneratorData{
         queueLock.unlock()
     }
 
-    def insertJobResult(accessKey: String, jobImages: Seq[BufferedImage]): Unit = {
+    def insertJobResult(accessKey: String, jobImages: Map[String, BufferedImage]): Unit = {
         handledRequests.addOne(accessKey -> Some(jobImages))
         outputQueueLock.lock()
+        nJobsDone += 1
         cleaningJobs.addOne(Instant.now.getEpochSecond -> accessKey)
         outputQueueCondition.signal()
         outputQueueLock.unlock()
@@ -76,8 +77,9 @@ object GeneratorData{
     }
 
     def isJobDone(accessKey: String): Option[Boolean] = {
-        if(handledRequests.contains(accessKey) && handledRequests.get(accessKey) != None)
+        if(handledRequests.contains(accessKey) && handledRequests.getOrElse(accessKey, None) != None){
             Some(true)
+        }
         else if(handledRequests.contains(accessKey))
             Some(false)
         else if(jobIndices.contains(accessKey))
@@ -86,7 +88,7 @@ object GeneratorData{
             None
     }
 
-    def getJobResult(accessKey: String): Option[Seq[BufferedImage]] = {
+    def getJobResult(accessKey: String): Option[Map[String, BufferedImage]] = {
         if(isJobDone(accessKey).getOrElse(false)){
             handledRequests.getOrElse(accessKey, None)
         }
@@ -95,8 +97,9 @@ object GeneratorData{
     }
 
     def getJobQueuePosition(accessKey: String): Option[Long] = {
-        if (isJobDone(accessKey).getOrElse(false))
+        if (isJobDone(accessKey).getOrElse(false)){
             Some(0)
+        }
         else if (jobIndices.contains(accessKey))
             Some((jobIndices.getOrElse(accessKey, 0L) - nJobsDone).max(1))
         else

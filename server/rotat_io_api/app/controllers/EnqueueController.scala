@@ -18,7 +18,6 @@ class EnqueueController @Inject()(val controllerComponents: ControllerComponents
   val logger: Logger = Logger(this.getClass())
   def enqueue() = Action (parse.multipartFormData) { request =>
     //Try to load the requested imagez`
-    println(request.charset.getOrElse("none"))
     request.body.file("file").flatMap {picture => 
       Try{
         val image = ImageIO.read(picture.ref)

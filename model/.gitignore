@@ -1,3 +1,4 @@
 *.h5
 v1_checkpoints/*
 v2_checkpoints/*
+best_image_model_bundle
